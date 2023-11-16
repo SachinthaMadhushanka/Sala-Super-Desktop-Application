@@ -8,7 +8,6 @@ $response = ['success' => false, 'message' => '', 'invoice_id' => null];
 $postData = $_POST;
 
 
-
 try {
   // Begin transaction
   $pdo->beginTransaction();
@@ -35,15 +34,32 @@ try {
     $quantity = $item['quantity'];
     $unit_price = $item['saleprice']; // Ensure that saleprice is provided for each item
 
-    // Insert into invoice_details table
-    $detailsSQL = "INSERT INTO invoice_details (invoice_id, stock_id, qty, unit_price) VALUES (:invoice_id, :stock_id, :qty, :unit_price)";
-    $stmt = $pdo->prepare($detailsSQL);
-    $stmt->execute([
-      ':invoice_id' => $lastInvoiceID,
-      ':stock_id' => $stockID,
-      ':qty' => $quantity,
-      ':unit_price' => $unit_price // Make sure this column exists in your invoice_details table
-    ]);
+    // Find the corresponding product_id for the stock_id from the product_stock table
+    $productIDQuery = "SELECT pid, purchaseprice, saleprice FROM product_stock WHERE id = :stock_id";
+    $productStmt = $pdo->prepare($productIDQuery);
+    $productStmt->execute([':stock_id' => $stockID]);
+    $productRow = $productStmt->fetch(PDO::FETCH_ASSOC);
+    $productID = $productRow['pid']; // Assuming 'pid' is the product_id column in your product_stock table
+    $profit = $productRow['saleprice'] - $productRow['purchaseprice'];
+
+    // Check if product_id is found
+    if ($productID) {
+      // Insert into invoice_details table
+      $detailsSQL = "INSERT INTO invoice_details (invoice_id, product_id, qty, unit_price, profit) VALUES (:invoice_id, :product_id, :qty, :unit_price, :profit)";
+      $stmt = $pdo->prepare($detailsSQL);
+      $stmt->execute([
+        ':invoice_id' => $lastInvoiceID,
+        ':product_id' => $productID,
+        ':qty' => $quantity,
+        ':unit_price' => $unit_price,
+        ':profit' => $profit
+      ]);
+    } else {
+      $pdo->rollBack();
+      $response['message'] = "Error: Product ID not found for stock ID $stockID.";
+      echo json_encode($response);
+      exit; // Exit the script
+    }
 
 
     // Update product_stock

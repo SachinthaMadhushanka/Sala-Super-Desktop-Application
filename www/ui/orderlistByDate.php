@@ -68,10 +68,9 @@ if ($_SESSION['role'] == "Admin") {
                     SELECT
                       invoice.*,
                       COUNT(invoice_details.id) as product_count,
-                      SUM((invoice_details.unit_price - product_stock.purchaseprice) * invoice_details.qty) as profit
+                      SUM(invoice_details.profit * invoice_details.qty) as profit
                     FROM invoice
                     LEFT JOIN invoice_details ON invoice.invoice_id = invoice_details.invoice_id
-                    LEFT JOIN product_stock ON invoice_details.stock_id = product_stock.id
                     WHERE DATE(invoice.date_time) = :orderDate
                     GROUP BY invoice.invoice_id
                     ORDER BY invoice.invoice_id ASC

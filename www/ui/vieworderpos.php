@@ -32,10 +32,8 @@ if (isset($_GET['id'])) {
   $invoice_items_query = $pdo->prepare("
     SELECT *
     FROM Invoice_Details
-    LEFT JOIN Product_Stock
-        ON Invoice_Details.stock_id = Product_Stock.id
     LEFT JOIN Product
-        ON Product_Stock.pid = Product.pid
+        ON Invoice_Details.product_id = Product.pid
     WHERE Invoice_Details.invoice_id = :invoice_id
 ");
   $invoice_items_query->bindParam(':invoice_id', $invoice_id);
@@ -131,7 +129,6 @@ if (isset($_GET['id'])) {
                       <thead>
                       <tr>
                         <th>Product</th>
-                        <th>Stock</th>
                         <th>price</th>
                         <th>QTY</th>
                         <th>Total</th>
@@ -286,15 +283,14 @@ include_once "footer.php";
   });
 
 
-  function addrow(pid, product, stock, saleprice, qty, barcode, stock_id) {
+  function addrow(pid, product, saleprice, qty, barcode) {
     let tr =
       '<tr>' +
-      '<input type="hidden" class="form-control barcode" name="barcode_arr[]" id="barcode_id' + stock_id + '" value="' + barcode + '" >' +
+      '<input type="hidden" class="form-control barcode" name="barcode_arr[]" id="barcode_id' + pid + '" value="' + barcode + '" >' +
       '<td style="text-align:left; vertical-align:middle; font-size:17px;"><span class="badge badge-dark">' + product + '</span><input type="hidden" class="form-control pid" name="pid_arr[]" value="' + pid + '" ><input type="hidden" class="form-control product" name="product_arr[]" value="' + product + '" >  </td>' +
-      '<td style="text-align:left; vertical-align:middle; font-size:17px;"><span class="badge badge-primary stocklbl" name="stock_arr[]" id="stock_id' + stock_id + '">' + stock + '</span><input type="hidden" class="form-control stock_id" name="stock_id_arr[]" id="stock_id' + stock_id + '" value="' + stock_id + '"><input type="hidden" class="form-control stock_qty" name="stock_qty_arr[]" id="stock_qty' + stock_id + '" value="' + stock + '"></td>' +
-      '<td style="text-align:left; vertical-align:middle; font-size:17px;"><span class="badge badge-warning price" name="price_arr[]" id="price_id' + stock_id + '">' + saleprice + '</span></td>' +
-      '<td><input disabled style="width: 80px" type="number" class="form-control qty" name="quantity_arr[]" id="qty_id' + stock_id + '" value="' + qty + '" size="1" min="1"></td>' +
-      '<td style="text-align:left; vertical-align:middle; font-size:17px;"><span class="badge badge-success totalamt" name="netamt_arr[]" id="total_raw_price_id' + stock_id + '">' + saleprice*qty + '</span><input type="hidden" class="form-control saleprice" name="saleprice_arr[]" id="saleprice_idd' + stock_id + '" value="' + saleprice*qty + '"></td>' +
+      '<td style="text-align:left; vertical-align:middle; font-size:17px;"><span class="badge badge-warning price" name="price_arr[]" id="price_id' + pid + '">' + saleprice + '</span></td>' +
+      '<td><input disabled style="width: 80px" type="number" class="form-control qty" name="quantity_arr[]" id="qty_id' + pid + '" value="' + qty + '" size="1" min="1"></td>' +
+      '<td style="text-align:left; vertical-align:middle; font-size:17px;"><span class="badge badge-success totalamt" name="netamt_arr[]" id="total_raw_price_id' + pid + '">' + saleprice*qty + '</span><input type="hidden" class="form-control saleprice" name="saleprice_arr[]" id="saleprice_idd' + pid + '" value="' + saleprice*qty + '"></td>' +
       '</tr>';
 
     $('.details').append(tr);
@@ -309,7 +305,7 @@ include_once "footer.php";
 
   for (let item of invoiceItems) {
     console.log(item.qty);
-    addrow(item.pid, item.product, item.stock, item.saleprice, item.qty, item.barcode, item.stock_id);
+    addrow(item.pid, item.product, item.unit_price, item.qty, item.barcode);
   }
   <?php endif; ?>
 

@@ -22,7 +22,7 @@ if (isset($_GET['barcode'])) {
             Product_Stock.saleprice
         FROM Product
         LEFT JOIN Category ON Product.catid = Category.catid
-        LEFT JOIN Product_Stock ON Product.pid = Product_Stock.pid
+        RIGHT JOIN Product_Stock ON Product.pid = Product_Stock.pid
         WHERE Product.barcode = :barcode
     ";
 

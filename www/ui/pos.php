@@ -124,9 +124,12 @@ ob_end_flush();
 
                   <select class="form-control select2" data-dropdown-css-class="select2-purple" style="width: 100%;"
                           id="productsearch_id">
+
+
                     <option>Select OR Search</option><?php echo fill_product($pdo); ?>
 
                   </select>
+
                   </br>
                   <div class="tableFixHead">
 
@@ -572,13 +575,58 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
   });
 
 
-  // When click ctrl + enter to place order
+  // Handling CTRL + Enter Key combinations -- Start
+  let ctrlPressed = false;
+  let enterPressed = false;
+  let ctrlEnterUsed = false; // Flag to indicate Ctrl + Enter combination was used
+
+  // Detect when Ctrl or Enter is pressed down
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter' && e.ctrlKey) {
-      e.preventDefault(); // Prevent default Ctrl+Enter key behavior
-      document.querySelector('button[name="btnsaveorder"]').click(); // Trigger the save button
+    if (e.key === "Control") {
+      ctrlPressed = true;
+    }
+
+    if (e.key === "Enter") {
+      enterPressed = true;
+    }
+
+    // Check for Ctrl + Enter combination
+    if (ctrlPressed && enterPressed) {
+      ctrlEnterUsed = true; // Set flag indicating Ctrl + Enter was used
+      document.querySelector('button[name="btnsaveorder"]').click();
+      console.log("Place order");
     }
   });
+
+  // Perform actions on keyup
+  document.addEventListener('keyup', function (e) {
+    // Skip other actions if Ctrl + Enter was used
+    if (ctrlEnterUsed) {
+      ctrlEnterUsed = false; // Reset the flag
+      ctrlPressed = false; // Reset the Ctrl pressed flag
+      enterPressed = false; // Reset the Enter pressed flag
+      return; // Exit the function
+    }
+
+    // Action for Ctrl only
+    if (ctrlPressed && e.key === "Control") {
+      $('#txtpaid').focus(); // Focus on the paid entry
+      ctrlPressed = false; // Reset the Ctrl pressed flag
+      console.log("Focus Paid Entry");
+
+    }
+
+    // Action for Enter only
+    if (enterPressed && e.key === "Enter") {
+      $('#txtbarcode_id').focus(); // Focus on the barcode entry
+      enterPressed = false; // Reset the Enter pressed flag
+      console.log("Focus Barcode Entry");
+
+    }
+  });
+
+
+  // Handling CTRL + Enter Key combinations -- End
 
 
   $("#itemtable").on("keyup change", ".qty", "keyup change", function () {
@@ -653,6 +701,55 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
 
   });
 
+  document.addEventListener('keypress', function (event) {
+
+    $('#hidden_button').click();
+    let key = event.key;
+    let select2Element = $('#productsearch_id'); // This is your Select2 element
+
+    // Check if the key is an alphabetic character, space, or comma
+    if (key.match(/^[A-Za-z ,]$/)) {
+      event.preventDefault(); // Prevent any default action
+
+      // Open the Select2 dropdown
+      select2Element.select2('open');
+      // select2Element.trigger('click');
+
+      // Wait for the dropdown to open
+      setTimeout(() => {
+        let searchInput = $('.select2-search__field');
+        if (searchInput.length > 0) {
+          // Set the value and focus
+          let currentValue = searchInput.val();
+          searchInput.val(currentValue + key);
+
+          // Trigger input event and focus after setting the value
+          setTimeout(() => {
+            searchInput.trigger('input').focus();
+          }, 10);
+        }
+      }, 50);
+    }
+  });
+
+
+  // Handle backspace separately
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Backspace') {
+      let select2Element = $('#productsearch_id'); // This is your Select2 element
+      select2Element.select2('open');
+
+      setTimeout(() => {
+        let searchInput = $('.select2-search__field');
+        if (searchInput.length > 0 && searchInput.val().length > 0) {
+          // Remove the last character from the search input
+          let currentValue = searchInput.val();
+          searchInput.val(currentValue.slice(0, -1)).focus().trigger('input');
+        }
+      }, 50);
+    }
+  });
+
 
   $(document).on('click', '.btnremove', function () {
     let stock_id = $(this).attr("data-id");
@@ -665,8 +762,9 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
     // Find the row to be removed
     let rowToRemove = $(this).closest('tr');
     // Find the next or previous row's stock_id
-    let nextRow = rowToRemove.next('tr').find('.btnremove').attr('data-id');
-    let prevRow = rowToRemove.prev('tr').find('.btnremove').attr('data-id');
+    let nextRowStockId = rowToRemove.next('tr').find('.btnremove').attr('data-id');
+    let prevRowStockId = rowToRemove.prev('tr').find('.btnremove').attr('data-id');
+
 
     // Remove the row from the table
     rowToRemove.remove();
@@ -677,16 +775,24 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
 
     updateOrderButtonState();
 
-    // Focus on the next or previous item's quantity, if available
-    let focusStockId = nextRow ? nextRow : prevRow;
-    if (focusStockId) {
-      // Construct the selector for the quantity input
-      let quantitySelector = `#stock_id${focusStockId}`;
-      let quantityInput = $(quantitySelector).find('.quantity');
-      if (quantityInput.length > 0) {
-        quantityInput.focus();
+    // Determine which row to focus on next
+    let focusStockId = prevRowStockId ? prevRowStockId : nextRowStockId;
+    console.log("Focus on stock_id:", focusStockId); // Debugging line
+
+    setTimeout(() => {
+      if (focusStockId) {
+        // Construct the selector for the quantity input
+        let qtySelector = '#qty_id' + focusStockId;
+        let qtyInput = $(qtySelector);
+        if (qtyInput.length > 0) {
+          qtyInput.focus();
+          console.log("Focusing on:", qtySelector); // Debugging line
+        }
+      } else {
+        $('#txtbarcode_id').focus();
+
       }
-    }
+    }, 100); // Delay to allow the DOM to update
   });
 
 
@@ -751,7 +857,6 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
       // quantities: quantities
       // stock_quantities: stock_quantities
     };
-
 
 
     // Send data using AJAX

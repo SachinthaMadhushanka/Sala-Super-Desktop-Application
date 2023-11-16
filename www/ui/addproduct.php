@@ -477,6 +477,7 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
           $('#txtproductname_id').val(response.data.product).prop('readonly', true);
           $('select[name="txtproductcategoryselect"]').val(response.data.catid).prop('disabled', true);
           $('#txtdescription_id').val(response.data.description).prop('readonly', true);
+          $('[name="txtstock"]').focus();
 
 
         } else if (response.status === 'error') {
@@ -485,11 +486,12 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
           $('#txtproductname_id').val('').prop('readonly', false);
           $('select[name="txtproductcategoryselect"]').val('').prop('disabled', false);
           $('#txtdescription_id').val('').prop('readonly', false);
+          $('[name="txtproductname"]').focus();
+
         }
 
         $('select[name="txtproductselect"]').on('change', onProductSelectChange);
 
-        $('[name="txtstock"]').focus();
 
 
       }
@@ -518,6 +520,7 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
           $('#txtproductname_id').val(response.data.product).prop('readonly', true);
           $('select[name="txtproductcategoryselect"]').val(response.data.catid).prop('disabled', true);
           $('#txtdescription_id').val(response.data.description).prop('readonly', true);
+          $('[name="txtstock"]').focus();
 
 
         } else if (response.status === 'error') {
@@ -526,10 +529,11 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
           $('#txtproductname_id').val('').prop('readonly', false);
           $('select[name="txtproductcategoryselect"]').val('').prop('disabled', false);
           $('#txtdescription_id').val('').prop('readonly', false);
+          $('[name="txtproductname"]').focus();
 
         }
 
-        $('[name="txtstock"]').focus();
+        // $('[name="txtstock"]').focus();
 
       }
     });
@@ -623,8 +627,7 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
 
   function purchasePriceOnBlur() {
     if (document.getElementsByName('txtpurchaseprice')[0].value < 0) {
-      document.getElementsByName('txtpurchaseprice')[0].value = 1;
-    }
+     }
   }
 
   function salePriceOnBlur() {

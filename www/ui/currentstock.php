@@ -86,7 +86,7 @@ if ($_SESSION['role'] == "Admin") {
                       ProductStock.saleprice
                   FROM Product
                   INNER JOIN Category ON Product.catid = Category.catid
-                  LEFT JOIN Product_Stock AS ProductStock ON Product.pid = ProductStock.pid
+                  RIGHT JOIN Product_Stock AS ProductStock ON Product.pid = ProductStock.pid
                   ORDER BY Product.pid ASC
               ");
 
