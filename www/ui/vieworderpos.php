@@ -129,7 +129,8 @@ if (isset($_GET['id'])) {
                       <thead>
                       <tr>
                         <th>Product</th>
-                        <th>price</th>
+                        <th>S Price</th>
+                        <th>O Price</th>
                         <th>QTY</th>
                         <th>Total</th>
                       </tr>
@@ -161,19 +162,6 @@ if (isset($_GET['id'])) {
                       <span class="input-group-text">Rs</span>
                     </div>
                   </div>
-
-
-                  <div class="input-group mb-3">
-                    <div class="input-group-prepend">
-                      <span class="input-group-text">DISCOUNT(%)</span>
-                    </div>
-                    <input value="0.0" type="number" class="form-control" name="txtdiscount_p" id="txtdiscount_p"
-                           readonly>
-                    <div class="input-group-append">
-                      <span class="input-group-text">%</span>
-                    </div>
-                  </div>
-
 
                   <div class="input-group mb-3">
                     <div class="input-group-prepend">
@@ -283,12 +271,13 @@ include_once "footer.php";
   });
 
 
-  function addrow(pid, product, saleprice, qty, barcode) {
+  function addrow(pid, product, saleprice, ourprice, qty, barcode) {
     let tr =
       '<tr>' +
       '<input type="hidden" class="form-control barcode" name="barcode_arr[]" id="barcode_id' + pid + '" value="' + barcode + '" >' +
       '<td style="text-align:left; vertical-align:middle; font-size:17px;"><span class="badge badge-dark">' + product + '</span><input type="hidden" class="form-control pid" name="pid_arr[]" value="' + pid + '" ><input type="hidden" class="form-control product" name="product_arr[]" value="' + product + '" >  </td>' +
       '<td style="text-align:left; vertical-align:middle; font-size:17px;"><span class="badge badge-warning price" name="price_arr[]" id="price_id' + pid + '">' + saleprice + '</span></td>' +
+      '<td style="text-align:left; vertical-align:middle; font-size:17px;"><span class="badge badge-primary ourprice" name="our_price_arr[]" id="our_price_id' + pid + '">' + ourprice + '</span></td>' +
       '<td><input disabled style="width: 80px" type="number" class="form-control qty" name="quantity_arr[]" id="qty_id' + pid + '" value="' + qty + '" size="1" min="1"></td>' +
       '<td style="text-align:left; vertical-align:middle; font-size:17px;"><span class="badge badge-success totalamt" name="netamt_arr[]" id="total_raw_price_id' + pid + '">' + saleprice*qty + '</span><input type="hidden" class="form-control saleprice" name="saleprice_arr[]" id="saleprice_idd' + pid + '" value="' + saleprice*qty + '"></td>' +
       '</tr>';
@@ -305,12 +294,11 @@ include_once "footer.php";
 
   for (let item of invoiceItems) {
     console.log(item.qty);
-    addrow(item.pid, item.product, item.unit_price, item.qty, item.barcode);
+    addrow(item.pid, item.product, item.unit_price, item.ourprice, item.qty, item.barcode);
   }
   <?php endif; ?>
 
   document.getElementById('txtsubtotal').value = invoiceDetails['subtotal']
-  document.getElementById('txtdiscount_p').value = (invoiceDetails['discount'] * 100 / invoiceDetails['subtotal']).toFixed(2);
   document.getElementById('txtdiscount').value = invoiceDetails['discount'];
   document.getElementById('txttotal').value = invoiceDetails['total'];
   document.getElementById('txtdue').value = invoiceDetails['due'];

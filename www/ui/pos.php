@@ -47,7 +47,7 @@ ob_end_flush();
 
   .tableFixHead {
     overflow: scroll;
-    height: 520px;
+    height: 670px;
   }
 
   .tableFixHead thead th {
@@ -139,7 +139,8 @@ ob_end_flush();
                       <tr>
                         <th>Product</th>
                         <th>Stock</th>
-                        <th>price</th>
+                        <th>S Price</th>
+                        <th>O Price</th>
                         <th>QTY</th>
                         <th>Total</th>
                         <th>Del</th>
@@ -172,18 +173,6 @@ ob_end_flush();
                       <span class="input-group-text">Rs</span>
                     </div>
                   </div>
-
-
-                  <div class="input-group mb-3">
-                    <div class="input-group-prepend">
-                      <span class="input-group-text">DISCOUNT(%)</span>
-                    </div>
-                    <input value="0.0" type="number" class="form-control" name="txtdiscount_p" id="txtdiscount_p">
-                    <div class="input-group-append">
-                      <span class="input-group-text">%</span>
-                    </div>
-                  </div>
-
 
                   <div class="input-group mb-3">
                     <div class="input-group-prepend">
@@ -301,7 +290,6 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
   ?>
   <script>
 
-
     Swal.fire({
       icon: '<?php echo $_SESSION['status_code'];?>',
       title: '<?php echo $_SESSION['status'];?>'
@@ -314,6 +302,7 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
 ?>
 
 <script>
+  let order_placed = false;
 
   // Focus to Barcode entry when pressing Enter from Quantity
   function handleEnter(event, stock_id) {
@@ -324,8 +313,10 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
       let qtyValue = parseFloat(qtyInput.value); // Parse the input value as a float
 
       // Check if the entered value is a float or less than 1
-      if (!Number.isInteger(qtyValue) || qtyValue < 1) {
+      if (isNaN(qtyValue) || qtyValue < 0) {
         qtyInput.value = 1; // Set it to 1 if it's a float or less than 1
+        $(qtyInput).trigger('change');
+
       }
 
       // Logic to determine the next element's ID
@@ -343,12 +334,10 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
     // let priceInput = document.getElementById("price_id" + stock_id);
     let qtyValue = parseFloat(qtyInput.value); // Parse the input value as a float
 
-    // Check if the entered value is a float or less than 1
-    if (!Number.isInteger(qtyValue) || qtyValue < 1) {
-      $('#qty_id' + stock_id).val(1).trigger('change')
+    // Check if the entered value is not a number (NaN) or less than 0
+    if (isNaN(qtyValue) || qtyValue < 0) {
+      $('#qty_id' + stock_id).val(1).trigger('change');
     }
-
-
   }
 
 
@@ -369,7 +358,6 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
 
     $('#txtbarcode_id').on('change', function () {
       let barcode = $("#txtbarcode_id").val();
-
       $.ajax({
         url: "../API/posGetProductsByBarcode.php",
         method: "get",
@@ -381,12 +369,12 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
             let stock_id = item.stock_id;
 
             if (jQuery.inArray(stock_id, productarr) !== -1) {
-              let stock_quantity = parseInt($('#stock_qty' + stock_id).val());
+              let stock_quantity = parseFloat($('#stock_qty' + stock_id).val());
 
-              if (stock_quantity > parseInt($('#qty_id' + stock_id).val())) {
-                let actualqty = parseInt($('#qty_id' + stock_id).val()) + 1;
+              if (stock_quantity > parseFloat($('#qty_id' + stock_id).val())) {
+                let actualqty = parseFloat($('#qty_id' + stock_id).val()) + 1;
                 $('#qty_id' + stock_id).val(actualqty);
-                let saleprice = parseInt(actualqty) * item.saleprice;
+                let saleprice = parseFloat(actualqty) * item.saleprice;
 
                 $('#total_raw_price_id' + stock_id).html(saleprice);
                 $('#saleprice_idd' + stock_id).val(saleprice);
@@ -394,16 +382,19 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
               }
 
             } else {
-              addrow(item.pid, item.product, item.saleprice, item.stock, item.barcode, stock_id);
+              addrow(item.pid, item.product, item.saleprice, item.ourprice, item.stock, item.barcode, stock_id);
               productarr.push(stock_id);
             }
             calculate();
             updateOrderButtonState();
 
-            autoFocusOnElementById("qty_id" + stock_id);
+            // autoFocusOnElementById("qty_id" + stock_id);
+            disableKeyListeners = false;
           });
 
           $("#txtbarcode_id").val("");
+          let lastRowStockId = $('.details tr:last .qty').attr('id');
+          $('#' + lastRowStockId).focus().select();
           // $("#qty_id + stock_id")
 
         }
@@ -425,12 +416,12 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
                 let stock_id = item.stock_id;
 
                 if (jQuery.inArray(stock_id, productarr) !== -1) {
-                  let stock_quantity = parseInt($('#stock_qty' + stock_id).val());
+                  let stock_quantity = parseFloat($('#stock_qty' + stock_id).val());
 
-                  if (stock_quantity > parseInt($('#qty_id' + stock_id).val())) {
-                    let actualqty = parseInt($('#qty_id' + stock_id).val()) + 1;
+                  if (stock_quantity > parseFloat($('#qty_id' + stock_id).val())) {
+                    let actualqty = parseFloat($('#qty_id' + stock_id).val()) + 1;
                     $('#qty_id' + stock_id).val(actualqty);
-                    let saleprice = parseInt(actualqty) * item.saleprice;
+                    let saleprice = parseFloat(actualqty) * item.saleprice;
 
                     $('#total_raw_price_id' + stock_id).html(saleprice);
                     $('#saleprice_idd' + stock_id).val(saleprice);
@@ -438,7 +429,7 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
                   }
 
                 } else {
-                  addrow(item.pid, item.product, item.saleprice, item.stock, item.barcode, stock_id);
+                  addrow(item.pid, item.product, item.saleprice, item.ourprice, item.stock, item.barcode, stock_id);
                   productarr.push(stock_id);
                 }
 
@@ -462,13 +453,15 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
       document.getElementById(elementId).focus();
     }
 
-    function addrow(pid, product, saleprice, stock, barcode, stock_id) {
+    function addrow(pid, product, saleprice, our_price, stock, barcode, stock_id) {
       let tr =
         '<tr>' +
         '<input type="hidden" class="form-control barcode" name="barcode_arr[]" id="barcode_id' + stock_id + '" value="' + barcode + '" >' +
         '<td style="text-align:left; vertical-align:middle; font-size:17px;"><span class="badge badge-dark">' + product + '</span><input type="hidden" class="form-control pid" name="pid_arr[]" value="' + pid + '" ><input type="hidden" class="form-control product" name="product_arr[]" value="' + product + '" >  </td>' +
         '<td style="text-align:left; vertical-align:middle; font-size:17px;"><span class="badge badge-primary stocklbl" name="stock_arr[]" id="stock_id' + stock_id + '">' + stock + '</span><input type="hidden" class="form-control stock_id" name="stock_id_arr[]" id="stock_id' + stock_id + '" value="' + stock_id + '"><input type="hidden" class="form-control stock_qty" name="stock_qty_arr[]" id="stock_qty' + stock_id + '" value="' + stock + '"></td>' +
         '<td style="text-align:left; vertical-align:middle; font-size:17px;"><span class="badge badge-warning price" name="price_arr[]" id="price_id' + stock_id + '">' + saleprice + '</span><input type="hidden" class="form-control sale_price_id" id="sale_price_id' + stock_id + '" value="' + saleprice + '"></td>' +
+        '<td style="text-align:left; vertical-align:middle; font-size:17px;"><span class="badge badge-primary our-price" name="our-price_arr[]">' + our_price + '</span><input type="hidden" class="form-control our_price_id" id="our_price_id' + stock_id + '" value="' + our_price + '"></td>' +
+
         '<td><input style="width: 80px" type="number" class="form-control qty" name="quantity_arr[]" id="qty_id' + stock_id + '" size="1" min="1" onkeydown="handleEnter(event, ' + stock_id + ')" onblur="handleBlur(event, ' + stock_id + ')"></td>' +
         '<td style="text-align:left; vertical-align:middle; font-size:17px;"><span class="badge badge-success totalamt" name="netamt_arr[]" id="total_raw_price_id' + stock_id + '">' + "0" + '</span><input type="hidden" class="form-control saleprice" name="saleprice_arr[]" id="saleprice_idd' + stock_id + '"></td>' +
         '<td><center><button type="button" name="remove" class="btn btn-danger btn-sm btnremove" data-id="' + stock_id + '"><span class="fas fa-trash"></span></button></center></td>' +
@@ -482,6 +475,12 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
           handleArrowKeys(event, stock_id);
         }
       });
+
+      let isMultiple = $('#itemtable .pid[value="' + pid + '"]').length > 1;
+      if (isMultiple) {
+        $('#itemtable .pid[value="' + pid + '"]').closest('tr').css('background-color', '#FFCCCC');
+      }
+
       calculate();
       productCount++;  // Increment product count
       updateOrderButtonState();
@@ -494,7 +493,7 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
   // This function will be called when arrow keys are pressed inside stock quantity
   function handleArrowKeys(event, stock_id) {
     let qtyInput = document.getElementById("qty_id" + stock_id);
-    let qtyValue = parseInt(qtyInput.value); // Parse the input value as an integer
+    let qtyValue = parseFloat(qtyInput.value); // Parse the input value as an integer
     switch (event.key) {
       case 'ArrowLeft':
         event.preventDefault();
@@ -510,7 +509,7 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
         event.preventDefault();
 
         // Increment the quantity
-        let stock_quantity = parseInt(document.getElementById('stock_qty' + stock_id).value);
+        let stock_quantity = parseFloat(document.getElementById('stock_qty' + stock_id).value);
         if (qtyValue < stock_quantity) {
           qtyInput.value = qtyValue + 1;
           calculate();
@@ -527,15 +526,15 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
         if (event.key === 'ArrowUp') {
           if (currentInputIndex > 0) {
             // Focus on previous item
-            qtyInputs.eq(currentInputIndex - 1).focus();
+            qtyInputs.eq(currentInputIndex - 1).focus().select();
           }
         } else if (event.key === 'ArrowDown') {
           if (currentInputIndex < qtyInputs.length - 1) {
             // Focus on next item
-            qtyInputs.eq(currentInputIndex + 1).focus();
+            qtyInputs.eq(currentInputIndex + 1).focus().select();
           } else if (currentInputIndex === qtyInputs.length - 1) {
             // Move focus from last product quantity input to paid input
-            $('#txtpaid').focus();
+            $('#txtpaid').focus().select();
           }
         }
         break;
@@ -551,7 +550,7 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
     if (event.key === 'ArrowUp') {
       event.preventDefault();
       let qtyInputs = $('.qty'); // Re-select the qty inputs here
-      qtyInputs.eq(qtyInputs.length - 1).focus(); // Focus the last qty input
+      qtyInputs.eq(qtyInputs.length - 1).focus().select(); // Focus the last qty input
     }
   });
 
@@ -561,72 +560,105 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
   document.getElementById('txtbarcode_id').addEventListener('keydown', (event) => {
     // Handle down arrow key in barcode input field
     if (event.key === 'ArrowDown') {
+      console.log("dowsn")
       event.preventDefault(); // prevent the default action
-
-      // Get all elements with IDs starting with 'stock_id'
-      const stockQuantities = document.querySelectorAll('[id^="qty_id"]');
-
-      // Focus on the first stock quantity field if it exists
-      if (stockQuantities.length > 0) {
-
-        stockQuantities[0].focus();
-      }
+      let firstRowStockId = $('.details tr:last .qty').attr('id');
+      $('#' + firstRowStockId).focus().select();
     }
+    // }
+  });
+
+  document.getElementById('txtbarcode_id').addEventListener('change', (event) => {
+    onBarcodeEntry = true;
   });
 
 
-  // Handling CTRL + Enter Key combinations -- Start
-  let ctrlPressed = false;
+  let addPressed = false;
   let enterPressed = false;
-  let ctrlEnterUsed = false; // Flag to indicate Ctrl + Enter combination was used
+  let addEnterUsed = false; // Flag to indicate + (NumpadAdd) + Enter combination was used
+  let disableKeyListeners = false; // Global flag to disable specific key listeners
+  let onBarcodeEntry = false;
 
-  // Detect when Ctrl or Enter is pressed down
+
+  // Detect when + (NumpadAdd) or Enter is pressed down
   document.addEventListener('keydown', function (e) {
-    if (e.key === "Control") {
-      ctrlPressed = true;
+    console.log("disableKeyListeners value:", disableKeyListeners);
+
+    if (disableKeyListeners) {
+      if (e.key === "Enter") {
+        disableKeyListeners = false;
+      }
+      return;
+    }
+
+    if (e.code === "NumpadAdd") {
+      addPressed = true;
+      // Prevent the default '+' character from being inputted
+      e.preventDefault();
     }
 
     if (e.key === "Enter") {
-      enterPressed = true;
+      if (!onBarcodeEntry) {
+
+        enterPressed = true;
+        // If + is already pressed, we prevent the Enter key from doing its default action
+        if (addPressed) {
+          e.preventDefault();
+        }
+      }
+      onBarcodeEntry = false;
+
     }
 
-    // Check for Ctrl + Enter combination
-    if (ctrlPressed && enterPressed) {
-      ctrlEnterUsed = true; // Set flag indicating Ctrl + Enter was used
+    // Check for + (NumpadAdd) + Enter combination
+    if (addPressed && enterPressed) {
+      addEnterUsed = true; // Set flag indicating + (NumpadAdd) + Enter was used
       document.querySelector('button[name="btnsaveorder"]').click();
       console.log("Place order");
+      // Prevent the default '+' character from being inputted
+      e.preventDefault();
     }
   });
 
   // Perform actions on keyup
   document.addEventListener('keyup', function (e) {
-    // Skip other actions if Ctrl + Enter was used
-    if (ctrlEnterUsed) {
-      ctrlEnterUsed = false; // Reset the flag
-      ctrlPressed = false; // Reset the Ctrl pressed flag
+    if (disableKeyListeners) {
+      if (e.key === "Enter") {
+        disableKeyListeners = false;
+      }
+      return;
+    }
+
+
+    // Skip other actions if + (NumpadAdd) + Enter was used
+    if (addEnterUsed) {
+      addEnterUsed = false; // Reset the flag
+      addPressed = false; // Reset the + (NumpadAdd) pressed flag
       enterPressed = false; // Reset the Enter pressed flag
       return; // Exit the function
     }
 
-    // Action for Ctrl only
-    if (ctrlPressed && e.key === "Control") {
-      $('#txtpaid').focus(); // Focus on the paid entry
-      ctrlPressed = false; // Reset the Ctrl pressed flag
+    // Action for + (NumpadAdd) only
+    if (addPressed && e.code === "NumpadAdd") {
+      $('#txtpaid').focus().select(); // Focus on the paid entry
+      addPressed = false; // Reset the + (NumpadAdd) pressed flag
       console.log("Focus Paid Entry");
-
     }
 
     // Action for Enter only
     if (enterPressed && e.key === "Enter") {
-      $('#txtbarcode_id').focus(); // Focus on the barcode entry
-      enterPressed = false; // Reset the Enter pressed flag
-      console.log("Focus Barcode Entry");
-
+      if (!onBarcodeEntry) {
+        $('#txtbarcode_id').focus(); // Focus on the barcode entry
+        enterPressed = false; // Reset the Enter pressed flag
+        console.log("Focus Barcode Entry");
+      }
+      onBarcodeEntry = false;
     }
   });
 
-
-  // Handling CTRL + Enter Key combinations -- End
+  // $('#txtbarcode_id').on("blur", function () {
+  //   onBarcodeEntry = false;
+  // })
 
 
   $("#itemtable").on("keyup change", ".qty", "keyup change", function () {
@@ -636,14 +668,20 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
 
     if ((quantity.val() - 0) > (tr.find(".stock_qty").val() - 0)) {
 
-      Swal.fire("WARNING!", "SORRY! This Much Of Quantity Is Not Available", "warning");
-      quantity.val(1);
-
-      tr.find(".totalamt").text(quantity.val() * tr.find(".price").text());
-
-      tr.find(".saleprice").val(quantity.val() * tr.find(".price").text());
-      calculate();
-      updateOrderButtonState();
+      Swal.fire("WARNING!", "SORRY! This Much Of Quantity Is Not Available", "warning").then((result) => {
+        quantity.val(1).select();
+        tr.find(".totalamt").text(quantity.val() * tr.find(".price").text());
+        tr.find(".saleprice").val(quantity.val() * tr.find(".price").text());
+        calculate();
+        updateOrderButtonState();
+      });
+      // quantity.val(1).select();
+      //
+      // tr.find(".totalamt").text(quantity.val() * tr.find(".price").text());
+      //
+      // tr.find(".saleprice").val(quantity.val() * tr.find(".price").text());
+      // calculate();
+      // updateOrderButtonState();
 
     } else {
       tr.find(".totalamt").text(quantity.val() * tr.find(".price").text());
@@ -656,30 +694,46 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
 
 
   function calculate() {
-
-    console.log("Calculating");
-
     let subtotal = 0;
     let total;
     let paid_amt = $("#txtpaid").val();
     let due = 0;
+    let totalDiscount = 0;
 
-    $(".saleprice").each(function () {
 
-      subtotal = subtotal + ($(this).val() * 1);
-    });
+    // // Iterate through each row in the table
+    // $('#producttable tbody tr').each(function() {
+    //   let saleprice = $(this).find('.sale_price_id').val(); // Get the selling price
+    //   let ourprice = $(this).find('.our_price_id').val(); // Get our price
+    //
+    //   // Calculate the discount for this row and add it to total discount
+    //   totalDiscount += (saleprice - ourprice);
+    //
+    //   // Update subtotal
+    //   subtotal += parseFloat(saleprice);
+    // });
+
+    $('.stock_id').each(function () {
+      let stock_id = $(this).val();
+      let saleprice_id = '#sale_price_id' + stock_id;
+      let saleprice = $(saleprice_id).val();
+
+      let ourprice_id = '#our_price_id' + stock_id;
+      let ourprice = $(ourprice_id).val();
+
+      let qty_id = '#qty_id' + stock_id;
+      let qty = $(qty_id).val();
+
+      subtotal += saleprice * qty;
+      totalDiscount += (saleprice-ourprice) * qty;
+    })
 
     $("#txtsubtotal").val(subtotal.toFixed(2));
 
-    let discount = parseFloat($("#txtdiscount_p").val());
-
-    discount = discount / 100;
-    discount = discount * subtotal;
-
-    $("#txtdiscount").val(discount.toFixed(2));
+    $("#txtdiscount").val(totalDiscount.toFixed(2));
 
 
-    total = subtotal - discount;
+    total = subtotal - totalDiscount;
     due = total - paid_amt;
 
 
@@ -702,13 +756,14 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
   });
 
   document.addEventListener('keypress', function (event) {
-
-    $('#hidden_button').click();
     let key = event.key;
     let select2Element = $('#productsearch_id'); // This is your Select2 element
 
     // Check if the key is an alphabetic character, space, or comma
     if (key.match(/^[A-Za-z ,]$/)) {
+      disableKeyListeners = true;
+
+      $('.select2-selection').focus();
       event.preventDefault(); // Prevent any default action
 
       // Open the Select2 dropdown
@@ -737,7 +792,7 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
   document.addEventListener('keydown', function (event) {
     if (event.key === 'Backspace') {
       let select2Element = $('#productsearch_id'); // This is your Select2 element
-      select2Element.select2('open');
+      // select2Element.select2('open');
 
       setTimeout(() => {
         let searchInput = $('.select2-search__field');
@@ -785,7 +840,7 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
         let qtySelector = '#qty_id' + focusStockId;
         let qtyInput = $(qtySelector);
         if (qtyInput.length > 0) {
-          qtyInput.focus();
+          qtyInput.focus().select();
           console.log("Focusing on:", qtySelector); // Debugging line
         }
       } else {
@@ -808,6 +863,14 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
   }
 
   function placeOrder() {
+
+
+
+    if (order_placed) {
+      return;
+    }
+
+    order_placed = true;
     // Collect data
 
     let items = $('.stock_id').map(function () {
@@ -816,11 +879,17 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
       let saleprice = $(saleprice_id).val();
       let qty_id = '#qty_id' + stock_id; // The ID for the quantity input
       let quantity = $(qty_id).val(); // Get the value of the quantity input
+      let ourprice_id = '#our_price_id' + stock_id;
+      let ourprice = $(ourprice_id).val();
 
+      if (quantity.trim() === '') {
+        return null;
+      }
       // Return an object containing the stock ID, sale price, and quantity for each item
       return {
         stock_id: stock_id,
         saleprice: saleprice,
+        ourprice: ourprice,
         quantity: quantity
       };
     }).get();
@@ -829,7 +898,7 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
     // let quantities = $('.qty').map(function () {
     //   return $(this).val();
     // }).get();
-    //
+    //F
     // let stock_quantities = $('.stock_qty').map(function () {
     //   return $(this).val();
     // }).get();
@@ -853,7 +922,7 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
       payment_method: $('input[name=rb]:checked').val(),
       balance: $('#txtdue').val(),
       paid: $('#txtpaid').val(),
-      items: items,
+      items: items
       // quantities: quantities
       // stock_quantities: stock_quantities
     };
@@ -869,6 +938,8 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
           icon: "success",
           title: "Order Processed Successfully"
         }).then((result) => {
+          window.location.reload();
+
           var pdfWindow = window.open(`printbill.php?id=${JSON_response.invoice_id}`, '_blank');
           pdfWindow.onload = function () {
             pdfWindow.focus(); // The focus does not work on all browsers
@@ -876,7 +947,6 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
             pdfWindow.print();
           };
 
-          window.location.reload();
           // Redirect to the printbill.php page with the invoice ID
           // window.location.href = `printbill.php?id=${JSON_response.invoice_id}`;
 

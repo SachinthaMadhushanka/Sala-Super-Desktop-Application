@@ -19,7 +19,8 @@ if (isset($_GET['pid'])) {
             Product_Stock.id AS stock_id,
             Product_Stock.stock,
             Product_Stock.purchaseprice,
-            Product_Stock.saleprice
+            Product_Stock.saleprice,
+            Product_Stock.ourprice
         FROM Product
         LEFT JOIN Category ON Product.catid = Category.catid
         RIGHT JOIN Product_Stock ON Product.pid = Product_Stock.pid

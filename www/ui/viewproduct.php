@@ -55,7 +55,7 @@ include 'barcode/barcode128.php';
               <?php
               $stock_id = $_GET['stock_id'];
 
-              $select = $pdo->prepare("SELECT Product.*, Product_Stock.stock, Product_Stock.purchaseprice, Product_Stock.saleprice, Category.category
+              $select = $pdo->prepare("SELECT Product.*, Product_Stock.stock, Product_Stock.purchaseprice, Product_Stock.saleprice, Product_Stock.ourprice, Category.category
                          FROM Product
                          INNER JOIN Category ON Product.catid = Category.catid
                          INNER JOIN Product_Stock ON Product.pid = Product_Stock.pid
@@ -88,7 +88,10 @@ include 'barcode/barcode128.php';
       </li>
       <li class="list-group-item"><b>Sale Price</b> <span
           class="badge badge-dark float-right">' . $row->saleprice . '</span></li>
-      <li class="list-group-item"><b>Product Profit</b> <span class="badge badge-success float-right">' . ($row->saleprice - $row->purchaseprice) . '</span>
+
+      <li class="list-group-item"><b>Our Price</b> <span
+      class="badge badge-primary float-right">' . $row->ourprice . '</span></li>
+      <li class="list-group-item"><b>Product Profit</b> <span class="badge badge-success float-right">' . ($row->ourprice - $row->purchaseprice) . '</span>
       </li>
     </ul>
   </div>

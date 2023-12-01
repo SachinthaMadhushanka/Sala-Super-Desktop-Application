@@ -98,37 +98,6 @@ include_once "footer.php";
   $(document).ready(function () {
     $('[data-toggle="tooltip"]').tooltip();
 
-    $('.btndelete').click(function () {
-      var tdh = $(this);
-      var id = $(this).attr("id");
-
-      Swal.fire({
-        title: 'Do you want to delete?',
-        text: "You won't be able to revert this!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, delete it!'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          $.ajax({
-            url: 'ordertdelete.php',
-            type: 'post',
-            data: {pidd: id},
-            success: function (data) {
-              tdh.parents('tr').hide();
-            }
-          });
-          Swal.fire(
-            'Deleted!',
-            'Your Invoice has been deleted.',
-            'success'
-          )
-        }
-      })
-    });
-
     $('#table_orderlist').DataTable({
       "order": [[0, "desc"]]
     });

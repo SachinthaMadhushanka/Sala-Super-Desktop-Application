@@ -62,6 +62,7 @@ if ($_SESSION['role'] == "Admin") {
                   <td>Stock</td>
                   <td>PurchasePrice</td>
                   <td>SalePrice</td>
+                  <td>OurPrice</td>
                   <td>ActionIcons</td>
 
                 </tr>
@@ -83,7 +84,8 @@ if ($_SESSION['role'] == "Admin") {
                       ProductStock.id as stock_id,
                       ProductStock.stock,
                       ProductStock.purchaseprice,
-                      ProductStock.saleprice
+                      ProductStock.saleprice,
+                      ProductStock.ourprice
                   FROM Product
                   INNER JOIN Category ON Product.catid = Category.catid
                   RIGHT JOIN Product_Stock AS ProductStock ON Product.pid = ProductStock.pid
@@ -124,6 +126,7 @@ if ($_SESSION['role'] == "Admin") {
                       echo '<td>' . $item->stock . '</td>';
                       echo '<td>' . $item->purchaseprice . '</td>';
                       echo '<td>' . $item->saleprice . '</td>';
+                      echo '<td>' . $item->ourprice . '</td>';
                       echo '<td>';
                       // Your action icons/buttons go here
                       echo '<div class="btn-group">';
@@ -197,6 +200,7 @@ include_once "footer.php";
         tr.append('<td>' + item.stock + '</td>');
         tr.append('<td>' + item.purchaseprice + '</td>');
         tr.append('<td>' + item.saleprice + '</td>');
+        tr.append('<td>' + item.ourprice + '</td>');
 
         let userRole = <?php echo json_encode($_SESSION['role']); ?>;
 
@@ -243,59 +247,6 @@ include_once "footer.php";
   }
 
   $(document).ready(function () {
-
-    function generateTable(data) {
-      let tbody = $('#table_product tbody');
-      tbody.empty(); // Clear existing rows
-
-      tbody.css("backgroundColor", "#f7f5f5");  // Light Gray background color
-
-      let groupedData = [];
-      data.forEach(function (row) {
-        groupedData[row.barcode] = groupedData[row.barcode] || [];
-        groupedData[row.barcode].push(row);
-      });
-
-      let rowIndex = 0; // Initialize the counter for row index
-
-      for (let barcode in groupedData) {
-        let data = groupedData[barcode];
-        let rowspan = data.length;
-        let isBarcodeDisplayed = false;
-
-        data.forEach(function (item) {
-          let tr = $('<tr></tr>');
-
-          if (!isBarcodeDisplayed) {
-            tr.append('<td rowspan="' + rowspan + '">' + item.barcode + '</td>');
-            tr.append('<td rowspan="' + rowspan + '">' + item.product + '</td>');
-            tr.append('<td rowspan="' + rowspan + '">' + item.category + '</td>');
-            tr.append('<td rowspan="' + rowspan + '">' + item.description + '</td>');
-            isBarcodeDisplayed = true;
-          }
-
-          tr.append('<td>' + item.stock + '</td>');
-          tr.append('<td>' + item.purchaseprice + '</td>');
-          tr.append('<td>' + item.saleprice + '</td>');
-
-          // Add your action buttons here
-          let actionButtons = '<div class="btn-group">' +
-            '<a href="printbarcode.php?stock_id=' + item.stock_id + '" class="btn btn-dark btn-xs" role="button">' +
-            '<span class="fa fa-barcode" style="color:#ffffff" data-toggle="tooltip" title="PrintBarcode"></span></a>' +
-            '<a href="viewproduct.php?stock_id=' + item.stock_id + '" class="btn btn-warning btn-xs" role="button">' +
-            '<span class="fa fa-eye" style="color:#ffffff" data-toggle="tooltip" title="View Product"></span></a>' +
-            '<a href=' + item.stock_id + '"editstock.php?stock_id=" class="btn btn-success btn-xs" role="button">' +
-            '<span class="fa fa-edit" style="color:#ffffff" data-toggle="tooltip" title="Edit Product"></span></a>' +
-            // '<button stock_id="' + item.stock_id + '" class="btn btn-danger btn-xs btndelete">' +
-            // '<span class="fa fa-trash" style="color:#ffffff" data-toggle="tooltip" title="Delete Product"></span></button>' +
-            '</div>';
-
-          tr.append('<td>' + actionButtons + '</td>');
-          tbody.append(tr);
-        });
-      }
-    }
-
     $('#customSearchBox').on('keyup', debounce(function () {
       let searchTerm = $(this).val();
       $.ajax({
@@ -303,7 +254,6 @@ include_once "footer.php";
         url: "../API/getFilteredProducts.php",
         data: {search: searchTerm}
       }).done(function (data) {
-        console.log(data);
         if (typeof data === 'string') {
           data = JSON.parse(data);
         }

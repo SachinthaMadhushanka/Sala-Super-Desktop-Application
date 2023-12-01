@@ -146,7 +146,7 @@ include_once "footer.php";
       let searchTerm = $(this).val();
       $.ajax({
         method: "GET",
-        url: "../API/getFilteredProducts.php",
+        url: "../API/getFilteredProductsOnly.php",
         data: {search: searchTerm}
       }).done(function (data) {
         if (typeof data === 'string') {

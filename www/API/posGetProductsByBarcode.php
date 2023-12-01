@@ -19,12 +19,13 @@ if (isset($_GET['barcode'])) {
             Product_Stock.id AS stock_id,
             Product_Stock.stock,
             Product_Stock.purchaseprice,
-            Product_Stock.saleprice
+            Product_Stock.saleprice,
+            Product_Stock.ourprice
         FROM Product
         LEFT JOIN Category ON Product.catid = Category.catid
         RIGHT JOIN Product_Stock ON Product.pid = Product_Stock.pid
         WHERE Product.barcode = :barcode
-    ";
+            ";
 
   $stmt = $pdo->prepare($sql);
   $stmt->bindParam(':barcode', $barcode);

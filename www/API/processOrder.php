@@ -35,24 +35,26 @@ try {
     $unit_price = $item['saleprice']; // Ensure that saleprice is provided for each item
 
     // Find the corresponding product_id for the stock_id from the product_stock table
-    $productIDQuery = "SELECT pid, purchaseprice, saleprice FROM product_stock WHERE id = :stock_id";
+    $productIDQuery = "SELECT pid, purchaseprice, saleprice, ourprice FROM product_stock WHERE id = :stock_id";
     $productStmt = $pdo->prepare($productIDQuery);
     $productStmt->execute([':stock_id' => $stockID]);
     $productRow = $productStmt->fetch(PDO::FETCH_ASSOC);
     $productID = $productRow['pid']; // Assuming 'pid' is the product_id column in your product_stock table
-    $profit = $productRow['saleprice'] - $productRow['purchaseprice'];
+    $profit = $productRow['ourprice'] - $productRow['purchaseprice'];
+    $ourprice = $productRow['ourprice'];
 
     // Check if product_id is found
     if ($productID) {
       // Insert into invoice_details table
-      $detailsSQL = "INSERT INTO invoice_details (invoice_id, product_id, qty, unit_price, profit) VALUES (:invoice_id, :product_id, :qty, :unit_price, :profit)";
+      $detailsSQL = "INSERT INTO invoice_details (invoice_id, product_id, qty, unit_price, profit, ourprice) VALUES (:invoice_id, :product_id, :qty, :unit_price, :profit, :ourprice)";
       $stmt = $pdo->prepare($detailsSQL);
       $stmt->execute([
         ':invoice_id' => $lastInvoiceID,
         ':product_id' => $productID,
         ':qty' => $quantity,
         ':unit_price' => $unit_price,
-        ':profit' => $profit
+        ':profit' => $profit,
+        ':ourprice' => $ourprice
       ]);
     } else {
       $pdo->rollBack();

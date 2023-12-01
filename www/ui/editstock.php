@@ -29,7 +29,8 @@ $select = $pdo->prepare("
         Product.description,
         Product_Stock.stock,
         Product_Stock.purchaseprice,
-        Product_Stock.saleprice
+        Product_Stock.saleprice,
+        Product_Stock.ourprice
     FROM Product
     INNER JOIN Product_Stock ON Product.pid = Product_Stock.pid
     INNER JOIN Category ON Product.catid = Category.catid
@@ -49,13 +50,15 @@ $description_db = $row['description'];
 $stock_db = $row['stock'];
 $purchaseprice_db = $row['purchaseprice'];
 $saleprice_db = $row['saleprice'];
+$ourprice_db = $row['ourprice'];
 
 
 if (isset($_POST['btneditproduct'])) {
   $saleprice_txt = $_POST['txtsaleprice'];
-  if ($purchaseprice_db > $saleprice_txt) {
+  $ourprice_txt = $_POST['txtourprice'];
+  if ($ourprice_txt < $purchaseprice_db || $saleprice_txt < $purchaseprice_db || $ourprice_txt > $saleprice_txt) {
     // Set session variable to indicate error and prevent DB update
-    $_SESSION['status'] = "Selling Price Cannot be Less Than Purchase Price";
+    $_SESSION['status'] = "Selling Price > Our Price > Purchase Price";
     $_SESSION['status_code'] = "error";
   } else {
     try {
@@ -63,10 +66,11 @@ if (isset($_POST['btneditproduct'])) {
       $pdo->beginTransaction();
 
       // Prepare the update statement
-      $updateStock = $pdo->prepare("UPDATE Product_Stock SET saleprice=:sprice WHERE id=:stock_id");
+      $updateStock = $pdo->prepare("UPDATE Product_Stock SET saleprice=:sprice, ourprice=:oprice WHERE id=:stock_id");
 
       // Bind the parameters
       $updateStock->bindParam(':sprice', $saleprice_txt);
+      $updateStock->bindParam(':oprice', $ourprice_txt);
       $updateStock->bindParam(':stock_id', $stock_id);
 
       // Execute the update
@@ -184,9 +188,18 @@ if (isset($_POST['btneditproduct'])) {
 
                     <div class="form-group">
                       <label>Selling Price</label>
-                      <input type="number" min="1" step="any"
+                      <input type="number" min="0.001" step="any"
                              class="form-control"
                              value="<?php echo $saleprice_db; ?>" placeholder="Enter Selling Price" name="txtsaleprice"
+                             autocomplete="off" required autofocus onfocus="this.select()">
+
+                    </div>
+
+                    <div class="form-group">
+                      <label>Our Price</label>
+                      <input type="number" min="0.001" step="any"
+                             class="form-control"
+                             value="<?php echo $ourprice_db; ?>" placeholder="Enter Our Price" name="txtourprice"
                              autocomplete="off" required autofocus onfocus="this.select()">
 
                     </div>
@@ -235,12 +248,30 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
 
   ?>
   <script>
+    // Function to handle actions after Swal alert is closed
+    function afterSwalClosed() {
+      // Focus on the barcode field or any other actions
+      document.getElementById('txtbarcode_id').focus();
+      // Remove the keydown event listener
+      document.removeEventListener('keydown', handleEnterKeyForSwal);
+    }
 
+    function handleEnterKeyForSwal(event) {
+      // Check if Enter key is pressed and Swal is visible
+      if (event.key === 'Enter' && Swal.isVisible()) {
+        event.preventDefault();
+        Swal.close();
+      }
+    }
+
+    // Show the Swal alert
     Swal.fire({
       icon: '<?php echo $_SESSION['status_code'];?>',
       title: '<?php echo $_SESSION['status'];?>'
-    });
+    }).then(afterSwalClosed);
 
+    // Add event listener for keydown
+    document.addEventListener('keydown', handleEnterKeyForSwal);
   </script>
   <?php
   unset($_SESSION['status']);

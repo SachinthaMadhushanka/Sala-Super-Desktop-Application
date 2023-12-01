@@ -186,7 +186,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
           </li>
 
           <li class="nav-item">
-            <a href="inStock.php" class="nav-link">
+            <a href="inStockLazyPagination.php" class="nav-link">
               <i class="nav-icon fas fa-truck-fast"></i>
               <p>
                 Incoming Stock
@@ -195,6 +195,25 @@ scratch. This page gets rid of all links and provides the needed markup only.
             </a>
           </li>
 
+          <li class="nav-item">
+            <a href="low_stock.php" class="nav-link">
+              <i class="nav-icon fas fa-warning"></i>
+              <p>
+                Low Stock
+
+              </p>
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a href="discounts.php" class="nav-link">
+              <i class="nav-icon fas fa-dollar"></i>
+              <p>
+                Discounts
+
+              </p>
+            </a>
+          </li>
 
           <li class="nav-item">
             <a href="pos.php" class="nav-link">
@@ -206,7 +225,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
             </a>
           </li>
           <li class="nav-item">
-            <a href="orderlist.php" class="nav-link">
+            <a href="orderlistLazyPagination.php" class="nav-link">
               <i class="nav-icon fas fa-receipt"></i>
               <p>
                 OrderList
@@ -216,7 +235,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
           </li>
 
           <li class="nav-item">
-            <a href="orderlistByDate.php" class="nav-link">
+            <a href="orderlistByDatePagintion.php" class="nav-link">
               <i class="nav-icon fas fa-th"></i>
               <p>
                 Order List By Date
@@ -280,7 +299,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
               </p>
             </a>
           </li>
-          
+
           <li class="nav-item">
             <a href="logout.php" class="nav-link">
               <i class="nav-icon fas fa-sign-out-alt"></i>

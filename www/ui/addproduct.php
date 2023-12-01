@@ -83,7 +83,7 @@ if (isset($_POST['btnsave'])) {
         $update->execute();
 
         // Insert into Product_Stock
-        $insertStock = $pdo->prepare("INSERT INTO Product_Stock (pid, stock, purchaseprice, saleprice) VALUES (:pid, :stock, :purchaseprice, :saleprice)");
+        $insertStock = $pdo->prepare("INSERT INTO Product_Stock (pid, stock, purchaseprice, saleprice, ourprice) VALUES (:pid, :stock, :purchaseprice, :saleprice, :saleprice)");
         $insertStock->bindParam(':pid', $pid);
         $insertStock->bindParam(':stock', $stock);
         $insertStock->bindParam(':purchaseprice', $purchaseprice);
@@ -133,7 +133,7 @@ if (isset($_POST['btnsave'])) {
           $pid = $pdo->lastInsertId();
 
           // Insert into Product_Stock
-          $insertStock = $pdo->prepare("INSERT INTO Product_Stock (pid, stock, purchaseprice, saleprice) VALUES (:pid, :stock, :purchaseprice, :saleprice)");
+          $insertStock = $pdo->prepare("INSERT INTO Product_Stock (pid, stock, purchaseprice, saleprice, ourprice) VALUES (:pid, :stock, :purchaseprice, :saleprice, :saleprice)");
           $insertStock->bindParam(':pid', $pid);
           $insertStock->bindParam(':stock', $stock);
           $insertStock->bindParam(':purchaseprice', $purchaseprice);
@@ -193,7 +193,7 @@ if (isset($_POST['btnsave'])) {
           $_SESSION['status_code'] = "success";
         } else {
           // No matching PID with the given purchase and sale price, insert new stock entry
-          $insertStock = $pdo->prepare("INSERT INTO Product_Stock (pid, stock, purchaseprice, saleprice) VALUES (:pid, :stock, :purchaseprice, :saleprice)");
+          $insertStock = $pdo->prepare("INSERT INTO Product_Stock (pid, stock, purchaseprice, saleprice, ourprice) VALUES (:pid, :stock, :purchaseprice, :saleprice, :saleprice)");
           $insertStock->bindParam(':pid', $pid);
           $insertStock->bindParam(':stock', $stock);
           $insertStock->bindParam(':purchaseprice', $purchaseprice);
@@ -367,7 +367,7 @@ if (isset($_POST['btnsave'])) {
 
                     <div class="form-group">
                       <label>Stock Quantity</label>
-                      <input type="number" min="1" step="any" class="form-control" placeholder="Enter Stock"
+                      <input type="number" min="0" step="any" class="form-control" placeholder="Enter Stock"
                              name="txtstock" autocomplete="off" required onblur="stockOnBlur()">
                     </div>
 
@@ -430,13 +430,32 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
 
   ?>
   <script>
+    // Define the function you want to execute when Enter is pressed
+    function onEnterPressed() {
+      // Your custom logic here
+      console.log("Enter key pressed");
 
+      // Example: focusing on the barcode field
+      window.location.reload();
+    }
 
+    // Show the Swal alert
     Swal.fire({
       icon: '<?php echo $_SESSION['status_code'];?>',
       title: '<?php echo $_SESSION['status'];?>'
     });
 
+    // Event listener for keydown
+    document.addEventListener('keydown', function (event) {
+      // Check if Enter key is pressed
+      if (event.key === 'Enter') {
+        // Check if a Swal is currently active
+        if (Swal.isVisible()) {
+          // Trigger the function
+          onEnterPressed();
+        }
+      }
+    });
   </script>
   <?php
   unset($_SESSION['status']);
@@ -491,7 +510,6 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
         }
 
         $('select[name="txtproductselect"]').on('change', onProductSelectChange);
-
 
 
       }
@@ -627,7 +645,7 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
 
   function purchasePriceOnBlur() {
     if (document.getElementsByName('txtpurchaseprice')[0].value < 0) {
-     }
+    }
   }
 
   function salePriceOnBlur() {

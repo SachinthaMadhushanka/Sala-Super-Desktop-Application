@@ -58,13 +58,14 @@ $pdf->Cell(70, 1, $dotted_line, 0, 0, 'L');
 $pdf->SetX(0);
 $pdf->Ln(4);
 // Table Headers
-$pdf->SetFont($font_fam, 'B', 8);
+$pdf->SetFont($font_fam, 'B', 7);
 // Adjust the widths to match the item rows
 $pdf->SetX(0);
-$pdf->Cell(41, 4, 'Item', 0, 0, 'L'); // Set to 40mm
-$pdf->Cell(4, 4, 'Qty', 0, 0, 'C'); // Set to 10mm
-$pdf->Cell(17, 4, 'Price', 0, 0, 'R'); // Set to 10mm
-$pdf->Cell(18, 4, 'Amt', 0, 1, 'R'); // Set to 10mm
+$pdf->Cell(26, 4, 'Item', 0, 0, 'L'); // Adjust the width as needed
+$pdf->Cell(10, 4, 'Qty', 0, 0, 'C'); // Adjust the width as needed
+$pdf->Cell(15, 4, 'Price', 0, 0, 'R'); // Adjust the width as needed
+$pdf->Cell(15, 4, 'Our Price', 0, 0, 'R'); // Adjust the width as needed
+$pdf->Cell(14, 4, 'Amt', 0, 1, 'R'); // Adjust the width as needed
 
 // Draw a dotted line for header
 $pdf->SetX(0);
@@ -76,7 +77,8 @@ $pdf->Ln(3);
 $select = $pdo->prepare("SELECT
     product.product as product_name,
     invoice_details.qty as qty,
-    invoice_details.unit_price as rate
+    invoice_details.unit_price as rate,
+    invoice_details.ourprice as ourprice
 FROM invoice_details
 JOIN product ON invoice_details.product_id = product.pid
 WHERE invoice_details.invoice_id = :id");
@@ -86,33 +88,46 @@ $select->execute();
 
 $lastY = $pdf->GetY();  // Store the Y position after the last product line for the dotted line
 
+$char_limit = 20; // Adjust the limit as needed
+$line_height = 3; // Adjust the line height as needed
+
 while ($product = $select->fetch(PDO::FETCH_OBJ)) {
-  // Store the starting Y position
-  $start_y = $pdf->GetY();
+  // Calculate the starting Y position for this row
+  $startY = $pdf->GetY();
   $pdf->SetX(0);
-  $pdf->SetFont($font_fam, '', 8);
 
-  $char_limit = 20; // Adjust the limit as needed
-  $product_name = $product->product_name;
+  // Print the product name, using MultiCell if it's longer than the char limit
+  $pdf->SetFont($font_fam, '', 6);
+  $pdf->MultiCell(26, $line_height, $product->product_name, 0, 'L');
 
-  if (strlen($product_name) > $char_limit) {
-    $pdf->MultiCell(41, 3, $product_name, 0, 'L');
-    $end_y = $pdf->GetY(); // Get the Y position after MultiCell
-    $pdf->SetY($start_y); // Reset Y to the starting position
-  } else {
-    $pdf->Cell(41, 3, $product_name, 0, 0, 'L');
-    $end_y = $pdf->GetY(); // Get the Y position after Cell
-  }
+  // Get the Y position after printing the product name
+  $endY = $pdf->GetY();
 
-  // Set X and Y for the next cells
-  $pdf->SetXY(41, $start_y);
-  $pdf->Cell(4, 3, $product->qty, 0, 0, 'C');
-  $pdf->Cell(17, 3, number_format($product->rate, 2), 0, 0, 'R');
-  $pdf->Cell(18, 3, number_format($product->qty * $product->rate, 2), 0, 1, 'R');
+  // The height of the next cells depends on whether the product name was wrapped
+  $cell_height = $endY - $startY;
 
-  // Update the Y position for the next row
-  $pdf->SetY($end_y);
-  $pdf->Ln(2); // Add space after the row
+  $pdf->SetFont($font_fam, '', 7);
+
+  // Set the X and Y position for the Qty cell
+  $pdf->SetXY(26, $startY);
+  $pdf->Cell(10, $cell_height, $product->qty, 0, 0, 'C');
+
+  // Set the X and Y position for the Price cell
+  $pdf->SetXY(36, $startY);
+  $pdf->Cell(15, $cell_height, number_format($product->rate, 2), 0, 0, 'R');
+
+  $pdf->SetXY(51, $startY); // Adjust the X position for Our Price
+  $pdf->Cell(15, $cell_height, number_format($product->ourprice, 2), 0, 0, 'R');
+
+  // Set the X and Y position for the Amount cell
+  $pdf->SetXY(66, $startY);
+  $pdf->Cell(14, $cell_height, number_format($product->qty * $product->ourprice, 2), 0, 0, 'R');
+
+  // Update the lastY position to the endY for the next row
+  $lastY = $endY;
+
+  // Move the cursor to the next line with a small margin below
+  $pdf->SetY($lastY + 1); // Adjust this value as needed to increase space between rows
 }
 
 
@@ -123,13 +138,28 @@ $pdf->Cell(70, 0, $dotted_line, 0, 0, 'L');
 $pdf->Ln(5);
 
 $pdf->SetFont($font_fam, '', 8);
+
+//// Subtotal
+//$pdf->SetX(0);
+//$pdf->Cell(53, 5, 'Subtotal', 0, 0, 'L');
+//$pdf->SetX(60);
+//$pdf->Cell(20, 5, number_format($row->subtotal, 2), 0, 1, 'R');
+
+// Discount
 $pdf->SetX(0);
-// Subtotal
-$pdf->Cell(53, 5, 'Total', 0, 0, 'L');
+$pdf->Cell(53, 5, 'Total Discount', 0, 0, 'L');
 $pdf->SetX(60);
-$pdf->Cell(20, 5, number_format($row->subtotal, 2), 0, 1, 'R');
+$pdf->Cell(20, 5, number_format($row->discount, 2), 0, 1, 'R');
+
+// Total
+$pdf->SetFont($font_fam, 'B', 8);
+$pdf->SetX(0);
+$pdf->Cell(53, 5, 'Total After Applying Discount', 0, 0, 'L');
+$pdf->SetX(60);
+$pdf->Cell(20, 5, number_format($row->total, 2), 0, 1, 'R');
 
 // Paid
+$pdf->SetFont($font_fam, '', 8);
 $pdf->SetX(0);
 $pdf->Cell(53, 5, 'Paid', 0, 0, 'L');
 $pdf->SetX(60);

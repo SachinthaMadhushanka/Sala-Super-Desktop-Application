@@ -149,7 +149,7 @@ CREATE TABLE `invoice_details` (
   `id` int(11) NOT NULL,
   `invoice_id` int(11) NOT NULL,
   `stock_id` int(11) NOT NULL,
-  `qty` int(11) NOT NULL,
+  `qty` float NOT NULL,
   `unit_price` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -242,7 +242,7 @@ INSERT INTO `product` (`pid`, `barcode`, `product`, `catid`, `description`) VALU
 CREATE TABLE `product_stock` (
   `id` int(11) NOT NULL,
   `pid` int(11) NOT NULL,
-  `stock` int(11) NOT NULL,
+  `stock` float NOT NULL,
   `purchaseprice` float NOT NULL,
   `saleprice` float NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
